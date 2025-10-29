@@ -68,3 +68,22 @@ void Node::setRecoveryRate(float rate)
 {
     recovery_rate = rate;
 }
+
+void Node::markExposed(float time){
+    if (curr_state == 'S'){
+        curr_state = 'E';
+        time_exposed = time;
+    }
+}
+void Node::markInfectious(float time){
+    if (curr_state == 'E'){
+        curr_state = 'I';
+        time_infect = time;
+    }
+}
+void Node::markRecovered(float time){
+    if (curr_state == 'E' || curr_state == 'I'){
+        curr_state = 'R';
+        time_recovery = time;
+    }
+}
