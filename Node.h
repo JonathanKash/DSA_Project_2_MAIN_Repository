@@ -32,6 +32,7 @@ public:
     vector<int> &getNeighbors(); // adjacency list
 
     // setters
+    void setDegreeOfSeparation(int degree);
     void setInfectionRate(float rate);
     void setIncubationRate(float rate);
     void setRecoveryRate(float rate);

@@ -50,3 +50,21 @@ float Node::getIncubationRate(){
 float Node::getRecoveryRate(){
     return recovery_rate;
 }
+vector<int>& Node::getNeighbors(){
+    return neighbors;
+}
+
+// setters
+void Node::setDegreeOfSeparation(int degree){
+    degree_of_separation = degree;
+}
+void Node::setInfectionRate(float rate){
+    infection_rate = rate;
+}
+void Node::setIncubationRate(float rate){
+    incubation_rate = rate;
+}
+void Node::setRecoveryRate(float rate)
+{
+    recovery_rate = rate;
+}
