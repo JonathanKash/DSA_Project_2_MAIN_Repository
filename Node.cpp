@@ -1,4 +1,3 @@
-#pragma once
 #include <iostream>
 #include <vector>
 #include <unordered_map>
@@ -14,7 +13,7 @@ Node::Node(int id, char state, float infectionRate, float incubationRate, float 
     curr_state = state;
     infection_rate = infectionRate;
     incubation_rate = incubationRate;
-    recovery_rate = recovery_rate;
+    recovery_rate = recoveryRate;
 }
 
 int Node::getId(){
@@ -25,9 +24,6 @@ int Node::getDegree(){
 }
 int Node::getDegreeOfSeparation(){
     return degree_of_separation;
-}
-char Node::getState(){
-    return curr_state;
 }
 char Node::getState(){
     return curr_state;
@@ -69,6 +65,7 @@ void Node::setRecoveryRate(float rate)
     recovery_rate = rate;
 }
 
+// SEIR helpers
 void Node::markExposed(float time){
     if (curr_state == 'S'){
         curr_state = 'E';
@@ -86,4 +83,18 @@ void Node::markRecovered(float time){
         curr_state = 'R';
         time_recovery = time;
     }
+}
+
+// markers
+bool Node::isSuceptible(){
+    return curr_state == 'S';
+}
+bool Node::isExposed(){
+    return curr_state == 'E';
+}
+bool Node::isInfectious(){
+    return curr_state == 'I';
+}
+bool Node::isRecovered(){
+    return curr_state == 'R';
 }

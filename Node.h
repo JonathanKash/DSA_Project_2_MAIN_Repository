@@ -1,5 +1,6 @@
 #include <vector>
 using namespace std;
+#pragma once
 
 class Node {
 private:
@@ -43,7 +44,7 @@ public:
     void markRecovered(float time);
 
     // markers
-    bool isSuseptible();
+    bool isSuceptible();
     bool isExposed();
     bool isInfectious();
     bool isRecovered();
