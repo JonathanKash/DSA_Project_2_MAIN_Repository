@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Epidemic Visualizer</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      :root{--pad:16px} body{margin:0;font-family:system-ui,sans-serif}
+      header{padding:var(--pad);border-bottom:1px solid #e5e5e5}
+      main{padding:var(--pad)} .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+      #screen-setup, #screen-viz { display:none }
+      canvas{width:100%;height:70vh;border:1px solid #ddd;display:block}
+    </style>
+  </head>
+  <body>
+    <header><strong>Epidemic Visualizer</strong> <span id="hdr"></span></header>
+
+    <main>
+      <!-- Setup -->
+      <section id="screen-setup">
+        <h2>Setup</h2>
+        <div class="row">
+          <label>Population <input id="pop" type="number" value="2000" min="100" step="100"></label>
+          <label>β <input id="beta" type="number" value="0.30" min="0" max="1" step="0.01"></label>
+          <label>σ <input id="sigma" type="number" value="0.20" min="0" max="1" step="0.01"></label>
+          <label>γ <input id="gamma" type="number" value="0.10" min="0" max="1" step="0.01"></label>
+          <button id="start">Start ▶</button>
+        </div>
+        <p>Load a saved run: <input id="file" type="file" accept="application/json"></p>
+        <p><a href="#/viz">Go to Visualization</a></p>
+      </section>
+
+      <!-- Visualization -->
+      <section id="screen-viz">
+        <h2>Visualization</h2>
+        <div class="row">
+          <button id="back">← Setup</button>
+          <button id="pause">Pause</button>
+          <span id="stats"></span>
+        </div>
+        <canvas id="canvas"></canvas>
+      </section>
+    </main>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
