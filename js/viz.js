@@ -58,7 +58,7 @@ function seedGrid(cfg) {
 }
 
 // One step of the cellular-automaton–style SEIR
-function step(sim, cfg) {
+function stepGrid(sim, cfg) {
   const { total, cells, timer, nbr } = sim;
   const next = new Uint8Array(total);
   const nextT = new Int16Array(total);
@@ -115,24 +115,35 @@ function step(sim, cfg) {
   sim.t++;
 }
 
+function seedQuad(cfg) {
+  return seedGrid(cfg);
+}
+function stepQuad(sim, cfg) {
+  // TODO: implement quadtree dynamics; for now, reuse grid stepping
+  stepGrid(sim, cfg);
+}
+
 export function initViz() {
   if (started) return; started = true;
 
-  // Add grid-specific defaults (keeps your Setup UI the same)
+  // Map UI rates to discrete-step durations (same as you had)
   const cfg = {
     population: state.config.population ?? 2000,
-    beta: state.config.beta ?? 0.30,               // per-step per-neighbor infection rate
-    incubationSteps: Math.round((1 / (state.config.sigma ?? 0.20)) * 2), // rough mapping to steps
+    beta: state.config.beta ?? 0.30,
+    incubationSteps: Math.round((1 / (state.config.sigma ?? 0.20)) * 2),
     infectiousSteps: Math.round((1 / (state.config.gamma ?? 0.10)) * 3),
   };
 
-  // Create canvas & controls
+  // NEW: read simType (defaults to 'grid')
+  const simType = state.config.simType || 'grid';
+
+  // Create canvas & controls (unchanged)
   const canvas = document.getElementById('canvas');
   const stats  = document.getElementById('stats');
   const pauseBtn = document.getElementById('pause');
   const backBtn  = document.getElementById('back');
 
-  // Size for HiDPI
+  // Size for HiDPI (unchanged)
   const dpr = devicePixelRatio || 1;
   const resize = () => {
     const r = canvas.getBoundingClientRect();
@@ -142,18 +153,29 @@ export function initViz() {
   addEventListener('resize', resize);
   resize();
 
-  // Seed grid simulation
-  state.sim = seedGrid(cfg);
+  // NEW: choose seeding + stepping based on mode
+  let stepFn = stepGrid;
+  if (simType === 'grid') {
+    console.log('Starting Grid (adjacency) mode...');
+    state.sim = seedGrid(cfg);
+    stepFn = stepGrid;
+  } else {
+    console.log('Starting Quad-Tree mode (placeholder uses grid seed/step) ...');
+    state.sim = seedQuad(cfg);
+    stepFn = stepQuad;
+  }
 
+  // Controls (unchanged)
   pauseBtn.onclick = () => {
     state.paused = !state.paused;
     pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
   };
   backBtn.onclick = () => { cancelAnimationFrame(raf); started = false; history.back(); };
 
+  // Loop: just call the selected step function
   const loop = () => {
     if (!state.paused) {
-      step(state.sim, cfg);
+      stepFn(state.sim, cfg);                 // <-- was: step(state.sim, cfg)
       drawFrame(canvas, state.sim);
       const c = state.sim.counts;
       stats.textContent = `t=${state.sim.t}  S:${c.S} E:${c.E} I:${c.I} R:${c.R}`;
