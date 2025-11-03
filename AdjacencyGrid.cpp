@@ -109,3 +109,9 @@ void Grid::seedInfectedPercent(float percent, bool atLeastOne){
 
 
 //Simulation
+Grid::Counts Grid::step(float t){
+    vector<char> nextState(N_);
+    for (int i=0; i < N_; i++) {
+        nextState[i] = nodes_[i].getState();
+    }
+}
