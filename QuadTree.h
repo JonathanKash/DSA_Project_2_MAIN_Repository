@@ -74,7 +74,7 @@ private:
         vector<float> *xs_;
         vector<float> *ys_;
 
-        vector<int> *ids_; // stored ids when size<= capacity_
+        vector<int> ids_; // stored ids when size<= capacity_
         bool subdivided_; // true if subdivided into 4 children
         Quadtree *nw_; // ptr to northwest child
         Quadtree *ne_;

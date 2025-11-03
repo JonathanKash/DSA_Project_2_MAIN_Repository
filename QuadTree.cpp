@@ -32,6 +32,7 @@ bool QuadTreeSim::AABB::intersectsCircle(float qx, float qy, float r)
     return (dx * dx + dy * dy); // intersects if sq distance <= r^2
 }
 
+// constructor
 QuadTreeSim::Quadtree::Quadtree(AABB &region, int capacity, vector<float> *xs, vector<float> *ys)
     : boundary_(region),
       capacity_(capacity),
@@ -41,7 +42,46 @@ QuadTreeSim::Quadtree::Quadtree(AABB &region, int capacity, vector<float> *xs, v
       subdivided_(false),
       nw_(nullptr), ne_(nullptr), sw_(nullptr), se_(nullptr) {}
 
+// destructor
 QuadTreeSim::Quadtree::~Quadtree()
 {
     destroyChildren();
+}
+
+// helper to delete child nodes
+void QuadTreeSim::Quadtree::destroyChildren(){
+    if (nw_ != nullptr) delete nw_;
+    if (ne_ != nullptr) delete ne_;
+    if (sw_ != nullptr) delete sw_;
+    if (se_ != nullptr) delete se_;
+    nw_ = nullptr;
+    ne_ = nullptr;
+    sw_ = nullptr;
+    se_ = nullptr;
+    subdivided_ = false;
+}
+
+// clear the node's ids and remove children
+void QuadTreeSim::Quadtree::clear(){
+    ids_.clear(); 
+    destroyChildren();
+}
+
+// split curr node into 4 quadrant children
+void QuadTreeSim::Quadtree::subdivide() {
+    float hx2 = boundary_.hx * 0.5f; // new children half-width
+    float hy2 = boundary_.hy * 0.5f; // new children half-height
+    float cx0 = boundary_.cx; // parent center x
+    float cy0 = boundary_.cy; // parent center y
+    // nw, ne, sw, se regions
+    AABB qnw(cx0 - hx2, cy0 - hy2, hx2, hy2);
+    AABB qne(cx0 + hx2, cy0 - hy2, hx2, hy2);
+    AABB qsw(cx0 - hx2, cy0 + hy2, hx2, hy2);
+    AABB qse(cx0 + hx2, cy0 + hy2, hx2, hy2);
+    // allocate nw, nw, sw, se children
+    nw_ = new Quadtree(qnw, capacity_, xs_, ys_);
+    ne_ = new Quadtree(qne, capacity_, xs_, ys_);
+    sw_ = new Quadtree(qsw, capacity_, xs_, ys_);
+    se_ = new Quadtree(qse, capacity_, xs_, ys_);
+    subdivided_ = true; 
 }
