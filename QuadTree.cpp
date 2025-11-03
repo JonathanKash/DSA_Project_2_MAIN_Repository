@@ -49,11 +49,16 @@ QuadTreeSim::Quadtree::~Quadtree()
 }
 
 // helper to delete child nodes
-void QuadTreeSim::Quadtree::destroyChildren(){
-    if (nw_ != nullptr) delete nw_;
-    if (ne_ != nullptr) delete ne_;
-    if (sw_ != nullptr) delete sw_;
-    if (se_ != nullptr) delete se_;
+void QuadTreeSim::Quadtree::destroyChildren()
+{
+    if (nw_ != nullptr)
+        delete nw_;
+    if (ne_ != nullptr)
+        delete ne_;
+    if (sw_ != nullptr)
+        delete sw_;
+    if (se_ != nullptr)
+        delete se_;
     nw_ = nullptr;
     ne_ = nullptr;
     sw_ = nullptr;
@@ -62,17 +67,19 @@ void QuadTreeSim::Quadtree::destroyChildren(){
 }
 
 // clear the node's ids and remove children
-void QuadTreeSim::Quadtree::clear(){
-    ids_.clear(); 
+void QuadTreeSim::Quadtree::clear()
+{
+    ids_.clear();
     destroyChildren();
 }
 
 // split curr node into 4 quadrant children
-void QuadTreeSim::Quadtree::subdivide() {
+void QuadTreeSim::Quadtree::subdivide()
+{
     float hx2 = boundary_.hx * 0.5f; // new children half-width
     float hy2 = boundary_.hy * 0.5f; // new children half-height
-    float cx0 = boundary_.cx; // parent center x
-    float cy0 = boundary_.cy; // parent center y
+    float cx0 = boundary_.cx;        // parent center x
+    float cy0 = boundary_.cy;        // parent center y
     // nw, ne, sw, se regions
     AABB qnw(cx0 - hx2, cy0 - hy2, hx2, hy2);
     AABB qne(cx0 + hx2, cy0 - hy2, hx2, hy2);
@@ -83,22 +90,60 @@ void QuadTreeSim::Quadtree::subdivide() {
     ne_ = new Quadtree(qne, capacity_, xs_, ys_);
     sw_ = new Quadtree(qsw, capacity_, xs_, ys_);
     se_ = new Quadtree(qse, capacity_, xs_, ys_);
-    subdivided_ = true; 
+    subdivided_ = true;
 }
 
-bool QuadTreeSim::Quadtree::insert(int id) {
+// insert id into the tree
+bool QuadTreeSim::Quadtree::insert(int id)
+{
     float x = (*xs_)[id]; // get x pos
     float y = (*ys_)[id]; // get y pos
-    if (!boundary_.contains(x, y)) return false; // false if outside node's region
-    if (ids_.size() < capacity_){ // if there's space store id here
+    if (!boundary_.contains(x, y))
+        return false; // false if outside node's region
+    if (ids_.size() < capacity_)
+    { // if there's space store id here
         ids_.push_back(id);
         return true;
     }
-    if (!subdivided_) subdivide(); // if full and not subdivided, create children
+    if (!subdivided_)
+        subdivide(); // if full and not subdivided, create children
     // try inserting into nw, ne, sw, se
-    if (nw_->insert(id)) return true;
-    if (ne_->insert(id)) return true;
-    if (sw_->insert(id)) return true;
-    if (se_->insert(id)) return true;
+    if (nw_->insert(id))
+        return true;
+    if (ne_->insert(id))
+        return true;
+    if (sw_->insert(id))
+        return true;
+    if (se_->insert(id))
+        return true;
     return false;
+}
+
+// recursive helper
+void QuadTreeSim::Quadtree::queryCircleRecursive(float qx, float qy, float r, vector<int> &out)
+{
+    if (!boundary_.intersectsCircle(qx, qy, r))
+        return; // skip subtree if region doesn't intersect circle
+    for (int i = 0; i < ids_.size(); i++)
+    {
+        int id = ids_[i];
+        float dx = (*xs_)[id] - qx; // delta x from center
+        float dy = (*ys_)[id] - qy;
+        if (dx * dx + dy * dy <= r * r) // if within r^2 append id to output vector
+            out.push_back(id);
+    }
+    // if there are children, query them recursively
+    if (subdivided_)
+    {
+        nw_->queryCircleRecursive(qx, qy, r, out);
+        ne_->queryCircleRecursive(qx, qy, r, out);
+        sw_->queryCircleRecursive(qx, qy, r, out);
+        se_->queryCircleRecursive(qx, qy, r, out);
+    }
+}
+// perform a circle-range search using the recursive helper
+void QuadTreeSim::Quadtree::queryCircle(float qx, float qy, float r, vector<int> &out)
+{
+    out.clear();
+    queryCircleRecursive(qx, qy, r, out);
 }
