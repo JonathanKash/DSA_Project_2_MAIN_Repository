@@ -27,14 +27,16 @@ void Grid::buildGrid(int N){
 
     //initialize Nodes
     for (int i=0; i < N_; i++){
-        nodes_.emplace_back(i, 'S', beta_, alpha_, gamma_)
+        nodes_.emplace_back(i, 'S', beta_, alpha_, gamma_);
     }
 }
 
 void Grid::connectNeighbors4(){
-    auto coords = [&](int id) {return pair<int, int>(id % W, id /W_); };
+    auto coords = [&](int id)
+    { return pair<int, int>(id % W_, id / W_); };
 
-    for (int id =0, id < N_; id++){
+    for (int id = 0; id < N_; id++)
+    {
         auto [x,y] = coords(id);
         auto &adj = nodes_[id].getNeighbors();
         adj.clear();
@@ -84,7 +86,8 @@ void Grid::seedInfectedCount(int k){
     shuffle(ids.begin(), ids.end(), rng_);
 
     //infect ids
-    for (int i=0, i <k; i++){
+    for (int i = 0; i < k; i++)
+    {
         int id=ids[i];
         if (nodes_[id].isSuceptible()){
             nodes_[id].markExposed(0.0f);
