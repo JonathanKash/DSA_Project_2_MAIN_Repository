@@ -85,3 +85,20 @@ void QuadTreeSim::Quadtree::subdivide() {
     se_ = new Quadtree(qse, capacity_, xs_, ys_);
     subdivided_ = true; 
 }
+
+bool QuadTreeSim::Quadtree::insert(int id) {
+    float x = (*xs_)[id]; // get x pos
+    float y = (*ys_)[id]; // get y pos
+    if (!boundary_.contains(x, y)) return false; // false if outside node's region
+    if (ids_.size() < capacity_){ // if there's space store id here
+        ids_.push_back(id);
+        return true;
+    }
+    if (!subdivided_) subdivide(); // if full and not subdivided, create children
+    // try inserting into nw, ne, sw, se
+    if (nw_->insert(id)) return true;
+    if (ne_->insert(id)) return true;
+    if (sw_->insert(id)) return true;
+    if (se_->insert(id)) return true;
+    return false;
+}
