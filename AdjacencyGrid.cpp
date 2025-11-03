@@ -117,4 +117,89 @@ Grid::Counts Grid::step(float t){
     for (int i=0; i < N_; i++) {
         nextState[i] = nodes_[i].getState();
     }
+
+    //Exposing Nodes
+    for (int i=0; i<N_; i++){
+        if (nodes_[i].isSuceptible()){
+            int infectNeighbors = 0;
+            for (int neighbor : nodes_[i].getNeighbors()){
+                if (nodes_[neighbor].isInfectious()) {
+                    infectNeighbors++;
+                }
+            }
+            if (infectNeighbors>0){
+                float safeProb= 1.0f;
+                for (int j=0; j < infectNeighbors; j++){
+                    safeProb *= (1.0f - beta_);
+                }
+                float infectProb = 1.0f - safeProb;
+                if (U_(rng_) <infectProb){
+                    nextState[i]='E';
+                }
+            }
+        }
+    }
+
+    //Incubating Nodes
+    for (int i=0; i< N_; i++){
+        if (nodes_[i].isExposed()){
+            if (U_(rng_) <alpha_){
+                nextState[i]= 'I';
+            }
+        }
+    }
+
+    //Recovering Nodes
+    for (int i=0; i< N_; i++){
+        if (nodes_[i].isInfectious()){
+            if (U_(rng_) <gamma_){
+                nextState[i]= 'R';
+            }
+        }
+    }
+
+    for (int i=0; i < N_; i++){
+        char current = nodes_[i].getState();
+        char next = nextState[i];
+        if (current == 'S' && next=='E') nodes_[i].markExposed(t);
+        else if (current == 'E' && next=='I') nodes_[i].markInfectious(t);
+        else if ((current == 'E' || current =='R') && next== 'R') nodes_[i].markRecovered(t);
+        }
+
+    Counts c{0,0,0,0};
+    for (int i =0; i< N_; i++){
+        switch(nodes_[i].getState()){
+            case 'S' : ++c.S; break;
+            case 'E' : ++c.E; break;
+            case 'I' : ++c.I; break;
+            case 'R' : ++c.R; break;
+        }
+    }
+
+    return c;
+}
+
+
+vector<Grid::Counts> Grid::runTillEnd(){
+    vector<Counts> history;
+    float t= 0.0f;
+    const float dt = 1.0f;
+
+    //initial
+    Counts c0{0,0,0,0};
+    for (auto &n :nodes_){
+        switch(n.getState()){
+            case 'S' : ++c0.S; break;
+            case 'E' : ++c0.E; break;
+            case 'I' : ++c0.I; break;
+            case 'R' : ++c0.R; break;
+        }
+    } 
+    history.push_back(c0);
+
+    while (history.back().I > 0){
+        t+= dt;
+        history.push_back(step(t));
+    }
+    return history;
 }
