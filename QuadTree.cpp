@@ -147,3 +147,19 @@ void QuadTreeSim::Quadtree::queryCircle(float qx, float qy, float r, vector<int>
     out.clear();
     queryCircleRecursive(qx, qy, r, out);
 }
+
+// constructor
+QuadTreeSim::QuadTreeSim(int N, float domainW, float domainH, float interactionR, float infectProbPerContact, float incubationProbPerStep, float recoveryProbPerStep, int rngSeed)
+    : N_(N), W_(domainW), H_(domainH), R_(interactionR), nodes_(), xs_(), ys_(), rng_(rngSeed), U_(0.0f, 1.0f),
+      beta_(infectProbPerContact), alpha_(incubationProbPerStep), gamma_(recoveryProbPerStep), tree_(nullptr)
+{
+    nodes_.reserve(N_); // allocate space for N nodes
+    xs_.resize(N_);     // size x-array to N
+    ys_.resize(N_);     // size y-array to N
+    for (int i = 0; i < N_; i++)
+    {
+        nodes_.emplace_back(i, 'S', beta_, alpha_, gamma_); // construct Node
+    }
+    layoutPositionsNearGrid(); // place nodes across the domain
+    rebuildQuadtree();          // build initial quadtree over the static pos
+}
