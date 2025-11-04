@@ -26,10 +26,10 @@ public:
     Counts step(float t);                                                   // advance simul one step at a time t
     vector<Counts> runToExtinction();                                       // run steps until no infectious left
 
-    void snapshot(vector<float> &outX,     // output x positions
-                  vector<float> &outY,     // output y positions
-                  vector<float> &outState, // output state S,E,I, or R per node
-                  vector<float> &outID);   // output node ids
+    void snapshot(vector<float> &outX,    // output x positions
+                  vector<float> &outY,    // output y positions
+                  vector<char> &outState, // output state S,E,I, or R per node
+                  vector<int> &outID);    // output node ids
     // accessors:
     vector<Node> &nodes() { return nodes_; } // reference to node list
     int size() { return N_; }                // num nodes

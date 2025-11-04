@@ -161,174 +161,213 @@ QuadTreeSim::QuadTreeSim(int N, float domainW, float domainH, float interactionR
         nodes_.emplace_back(i, 'S', beta_, alpha_, gamma_); // construct Node
     }
     layoutPositionsNearGrid(); // place nodes across the domain
-    rebuildQuadtree();          // build initial quadtree over the static pos
+    rebuildQuadtree();         // build initial quadtree over the static pos
 }
 
-void QuadTreeSim::layoutPositionsNearGrid(){
-    int wc=1; //initialize columns
-    //estimate near-square grid
-    if (N_ >1){
+void QuadTreeSim::layoutPositionsNearGrid()
+{
+    int wc = 1; // initialize columns
+    // estimate near-square grid
+    if (N_ > 1)
+    {
         wc = (int)floor(sqrt((double)N_));
-        if (wc <1) {
-            wc=1;
-            }
+        if (wc < 1)
+        {
+            wc = 1;
         }
-    int hc = (int)ceil((double)N_/(double)wc); //init rows
+    }
+    int hc = (int)ceil((double)N_ / (double)wc); // init rows
 
-    //declare spacing
+    // declare spacing
     float dx = 0.0f;
-    float dy= 0.0f;
+    float dy = 0.0f;
 
-    //even out spacing
-    if (wc > 1) {
-        dx = W_/ (float)(wc-1);
+    // even out spacing
+    if (wc > 1)
+    {
+        dx = W_ / (float)(wc - 1);
     }
-    if (hc >1) {
-        dy = H_ / (float)(hc-1);
+    if (hc > 1)
+    {
+        dy = H_ / (float)(hc - 1);
     }
-    
-    //set each nodes positions
-    for (int i=0; i < N_; i++){
-        int xg = i% wc;
-        int yg = i/wc;
 
-        if (wc==1) {
-            xs_[i]= (W_ * 0.5f);
-        } else {
+    // set each nodes positions
+    for (int i = 0; i < N_; i++)
+    {
+        int xg = i % wc;
+        int yg = i / wc;
+
+        if (wc == 1)
+        {
+            xs_[i] = (W_ * 0.5f);
+        }
+        else
+        {
             xs_[i] = (xg * dx);
         }
 
-        if (hc==1) {
-            ys_[i]= (H_ * 0.5f);
-        } else {
+        if (hc == 1)
+        {
+            ys_[i] = (H_ * 0.5f);
+        }
+        else
+        {
             ys_[i] = (yg * dy);
         }
     }
-
 }
 
-void QuadTreeSim::rebuildQuadtree() {
-    //delete existing quadtree
-    if (tree_ != NULL){
+void QuadTreeSim::rebuildQuadtree()
+{
+    // delete existing quadtree
+    if (tree_ != NULL)
+    {
         tree_->clear();
         delete tree_;
         tree_ = NULL;
     }
 
-    //define bounding box
-    AABB bounds(W_*0.5f, H_ * 0.5f, W_*0.5f, H_ * 0.5f);
+    // define bounding box
+    AABB bounds(W_ * 0.5f, H_ * 0.5f, W_ * 0.5f, H_ * 0.5f);
 
-    //allocate new quadtree
-    tree_= new Quadtree(bounds, 8, &xs_, &ys_);
+    // allocate new quadtree
+    tree_ = new Quadtree(bounds, 8, &xs_, &ys_);
 
-    //rebuild tree
-    for (int i=0; i< N_; i++){
+    // rebuild tree
+    for (int i = 0; i < N_; i++)
+    {
         (void)tree_->insert(i);
     }
 }
 
-void QuadTreeSim::seedInfectedCount(int k){
-    //rule out nonpositives
-    if (k<=0){
+void QuadTreeSim::seedInfectedCount(int k)
+{
+    // rule out nonpositives
+    if (k <= 0)
+    {
         return;
     }
-    if (k> N_){
-        k= N_;
+    if (k > N_)
+    {
+        k = N_;
     }
 
-    //create and mix ids in a new vector
+    // create and mix ids in a new vector
     vector<int> ids(N_);
     iota(ids.begin(), ids.end(), 0);
     shuffle(ids.begin(), ids.begin(), rng_);
 
-    //infect the first k unique ids in the shuffled vector
-    int i=0;
-    while (i<k){
+    // infect the first k unique ids in the shuffled vector
+    int i = 0;
+    while (i < k)
+    {
         int id = ids[i];
-        if (nodes_[id].isSuceptible()){
+        if (nodes_[id].isSuceptible())
+        {
             nodes_[id].markExposed(0.0f);
             nodes_[id].markInfectious(0.0f);
-        } 
+        }
         i++;
     }
 }
 
-void QuadTreeSim::seedInfectedPercent(float percent, bool atLeastOne){
-    if (percent<=0.0f){
-        if (atLeastOne) seedInfectedCount(1); //if true, 0% will still run the simulation
+void QuadTreeSim::seedInfectedPercent(float percent, bool atLeastOne)
+{
+    if (percent <= 0.0f)
+    {
+        if (atLeastOne)
+            seedInfectedCount(1); // if true, 0% will still run the simulation
         return;
     }
-    if (percent >= 100.0f){
-        seedInfectedCount(N_); //infect everyone and return
-        return; 
+    if (percent >= 100.0f)
+    {
+        seedInfectedCount(N_); // infect everyone and return
+        return;
     }
 
-    //get Percentage
-    int k= static_cast<int>(round((percent/100.0f) *N_));
-    if (atLeastOne) k=max(1,k);
+    // get Percentage
+    int k = static_cast<int>(round((percent / 100.0f) * N_));
+    if (atLeastOne)
+        k = max(1, k);
     seedInfectedCount(k);
 }
 
 // calc squared distance between two node indices
-float QuadTreeSim::dist2(int a, int b) {
+float QuadTreeSim::dist2(int a, int b)
+{
     float dx = xs_[a] - xs_[b];
     float dy = ys_[a] - ys_[b];
-    return dx*dx + dy*dy;
+    return dx * dx + dy * dy;
 }
 
 // advances the simulation by one time step
-QuadTreeSim::Counts QuadTreeSim::step(float t){
+QuadTreeSim::Counts QuadTreeSim::step(float t)
+{
     vector<char> nextState(N_);
-    for (int i=0; i < N_; i++) {
+    for (int i = 0; i < N_; i++)
+    {
         nextState[i] = nodes_[i].getState();
     }
     vector<int> candidates;
     candidates.reserve(32);
 
     // Exposing Nodes S->E
-    for (int i=0; i<N_; i++){
-        if (!nodes_[i].isSuceptible()){ // only susceptible nodes exposed
+    for (int i = 0; i < N_; i++)
+    {
+        if (!nodes_[i].isSuceptible())
+        { // only susceptible nodes exposed
             continue;
         }
         tree_->queryCircle(xs_[i], ys_[i], R_, candidates); // query neightbors in R
-        int infNeighbors = 0; // infec neighbor counter
-        for (int k = 0; k, candidates.size(); k++){
-            int nId = candidates[k]; 
-            if (nId == i) continue;
+        int infNeighbors = 0;                               // infec neighbor counter
+        for (int k = 0; k, candidates.size(); k++)
+        {
+            int nId = candidates[k];
+            if (nId == i)
+                continue;
             if (nodes_[nId].isInfectious())
                 infNeighbors++; // increm if neighbor infectious
         }
-        if (infNeighbors > 0){
+        if (infNeighbors > 0)
+        {
             float probUninfected = 1.0f; // prob to stay uninfected after all contacts
             int c = 0;
-            while (c < infNeighbors){
+            while (c < infNeighbors)
+            {
                 probUninfected *= (1.0f - beta_);
                 c++;
             }
-            float probInfect = 1.0f - probUninfected;  // total infection prob
-            if (U_(rng_) < probInfect){
+            float probInfect = 1.0f - probUninfected; // total infection prob
+            if (U_(rng_) < probInfect)
+            {
                 nextState[i] = 'E';
             }
         }
-    // Incubation E->I
-        for (int i = 0; i < N_; i++){
-            if (nodes_[i].isExposed()){ // consider only exposed nodes
+        // Incubation E->I
+        for (int i = 0; i < N_; i++)
+        {
+            if (nodes_[i].isExposed())
+            {                          // consider only exposed nodes
                 if (U_(rng_) < alpha_) // with prob alpha
                     nextState[i] = 'I';
             }
         }
     }
     // Recovery I->R
-    for (int i = 0; i < N_; i++){
-        if (nodes_[i].isInfectious()){ // consider only infectious nodes
+    for (int i = 0; i < N_; i++)
+    {
+        if (nodes_[i].isInfectious())
+        {                          // consider only infectious nodes
             if (U_(rng_) < gamma_) // with prob gamma
                 nextState[i] = 'R';
         }
     }
     // apply all transitions and timestamps
-    for (int i = 0; i < N_; i++){
+    for (int i = 0; i < N_; i++)
+    {
         char curr = nodes_[i].getState(); // curr state
-        char next = nextState[i]; // next state comp above
+        char next = nextState[i];         // next state comp above
         if (curr == 'S' && next == 'E')
             nodes_[i].markExposed(t);
         else if (curr == 'E' && next == 'I')
@@ -338,7 +377,8 @@ QuadTreeSim::Counts QuadTreeSim::step(float t){
     }
     // count S/E/I/R
     Counts c; // counts result
-    for (int i = 0; i < N_; i++){
+    for (int i = 0; i < N_; i++)
+    {
         char s = nodes_[i].getState(); // state after transitions
         // increment the counts for each state
         if (s == 'S')
@@ -354,13 +394,15 @@ QuadTreeSim::Counts QuadTreeSim::step(float t){
 }
 
 // run until I == 0
-vector<QuadTreeSim::Counts> QuadTreeSim::runToExtinction(){
+vector<QuadTreeSim::Counts> QuadTreeSim::runToExtinction()
+{
     vector<Counts> history; // store cts at each step
-    float t = 0.0f; // simulation time 
-    float dt = 1.0f; // time increment per step
+    float t = 0.0f;         // simulation time
+    float dt = 1.0f;        // time increment per step
 
     Counts c0; // initial cts
-    for (int i = 0; i < nodes_.size(); i++){
+    for (int i = 0; i < nodes_.size(); i++)
+    {
         char s = nodes_[i].getState(); // read state
         if (s == 'S')
             c0.S++;
@@ -373,9 +415,27 @@ vector<QuadTreeSim::Counts> QuadTreeSim::runToExtinction(){
     }
     history.push_back(c0); // record initial cts at t = 0
 
-    while (history.back().I > 0){ // continue while there are infectious nodes
-        t += dt; // advance time
+    while (history.back().I > 0)
+    {                               // continue while there are infectious nodes
+        t += dt;                    // advance time
         history.push_back(step(t)); // perform a step, record new cts
     }
     return history;
+}
+
+// copies curr state into caller provided arrays
+void QuadTreeSim::snapshot(vector<float> &outX, vector<float> &outY, vector<char> &outState, vector<int> &outId)
+{
+    // copy x and y positions
+    outX = xs_;
+    outY = ys_;
+    outState.clear();
+    outState.reserve(nodes_.size());
+    outId.clear();
+    outId.reserve(nodes_.size());
+    for (int i = 0; i < nodes_.size(); i++)
+    {
+        outState.push_back(nodes_[i].getState()); // append state char for node i
+        outId.push_back(i);                       // append node id
+    }
 }
