@@ -269,12 +269,14 @@ void QuadTreeSim::seedInfectedPercent(float percent, bool atLeastOne){
     seedInfectedCount(k);
 }
 
+// calc squared distance between two node indices
 float QuadTreeSim::dist2(int a, int b) {
     float dx = xs_[a] - xs_[b];
     float dy = ys_[a] - ys_[b];
     return dx*dx + dy*dy;
 }
 
+// advances the simulation by one time step
 QuadTreeSim::Counts QuadTreeSim::step(float t){
     vector<char> nextState(N_);
     for (int i=0; i < N_; i++) {
@@ -283,13 +285,70 @@ QuadTreeSim::Counts QuadTreeSim::step(float t){
     vector<int> candidates;
     candidates.reserve(32);
 
-    //Exposing Nodes
+    // Exposing Nodes S->E
     for (int i=0; i<N_; i++){
-        if (!nodes_[i].isSuceptible()){
+        if (!nodes_[i].isSuceptible()){ // only susceptible nodes exposed
             continue;
         }
-        tree_->queryCircle(xs_[i], ys_[i], R_, candidates);
+        tree_->queryCircle(xs_[i], ys_[i], R_, candidates); // query neightbors in R
+        int infNeighbors = 0; // infec neighbor counter
+        for (int k = 0; k, candidates.size(); k++){
+            int nId = candidates[k]; 
+            if (nId == i) continue;
+            if (nodes_[nId].isInfectious())
+                infNeighbors++; // increm if neighbor infectious
+        }
+        if (infNeighbors > 0){
+            float probUninfected = 1.0f; // prob to stay uninfected after all contacts
+            int c = 0;
+            while (c < infNeighbors){
+                probUninfected *= (1.0f - beta_);
+                c++;
+            }
+            float probInfect = 1.0f - probUninfected;  // total infection prob
+            if (U_(rng_) < probInfect){
+                nextState[i] = 'E';
+            }
+        }
+    // Incubation E->I
+        for (int i = 0; i < N_; i++){
+            if (nodes_[i].isExposed()){ // consider only exposed nodes
+                if (U_(rng_) < alpha_) // with prob alpha
+                    nextState[i] = 'I';
+            }
+        }
     }
-
-    //continue here
+    // Recovery I->R
+    for (int i = 0; i < N_; i++){
+        if (nodes_[i].isInfectious()){ // consider only infectious nodes
+            if (U_(rng_) < gamma_) // with prob gamma
+                nextState[i] = 'R';
+        }
+    }
+    // apply all transitions and timestamps
+    for (int i = 0; i < N_; i++){
+        char curr = nodes_[i].getState(); // curr state
+        char next = nextState[i]; // next state comp above
+        if (curr == 'S' && next == 'E')
+            nodes_[i].markExposed(t);
+        else if (curr == 'E' && next == 'I')
+            nodes_[i].markInfectious(t);
+        else if ((curr == 'E' || curr == 'I') && next == 'R')
+            nodes_[i].markRecovered(t);
+    }
+    // count S/E/I/R
+    Counts c; // counts result
+    for (int i = 0; i < N_; i++){
+        char s = nodes_[i].getState(); // state after transitions
+        // increment the counts for each state
+        if (s == 'S')
+            c.S++;
+        else if (s == 'E')
+            c.E++;
+        else if (s == 'I')
+            c.I++;
+        else if (s == 'R')
+            c.R++;
+    }
+    return c;
 }
