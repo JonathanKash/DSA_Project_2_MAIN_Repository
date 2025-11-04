@@ -23,7 +23,6 @@ public:
                 int rngSeed = random_device{}());                           // seed for RNG
     void seedInfectedPercent(float percent, bool ensureAtLeastOnce = true); // infect % of nodes, unique random ids
     void seedInfectedCount(int k);                                          // infect k unique random ids
-    void seedInfected(vector<int> &ids);                                    // infect explicit ids
     Counts step(float t);                                                   // advance simul one step at a time t
     vector<Counts> runToExtinction();                                       // run steps until no infectious left
 

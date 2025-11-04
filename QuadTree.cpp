@@ -163,3 +163,133 @@ QuadTreeSim::QuadTreeSim(int N, float domainW, float domainH, float interactionR
     layoutPositionsNearGrid(); // place nodes across the domain
     rebuildQuadtree();          // build initial quadtree over the static pos
 }
+
+void QuadTreeSim::layoutPositionsNearGrid(){
+    int wc=1; //initialize columns
+    //estimate near-square grid
+    if (N_ >1){
+        wc = (int)floor(sqrt((double)N_));
+        if (wc <1) {
+            wc=1;
+            }
+        }
+    int hc = (int)ceil((double)N_/(double)wc); //init rows
+
+    //declare spacing
+    float dx = 0.0f;
+    float dy= 0.0f;
+
+    //even out spacing
+    if (wc > 1) {
+        dx = W_/ (float)(wc-1);
+    }
+    if (hc >1) {
+        dy = H_ / (float)(hc-1);
+    }
+    
+    //set each nodes positions
+    for (int i=0; i < N_; i++){
+        int xg = i% wc;
+        int yg = i/wc;
+
+        if (wc==1) {
+            xs_[i]= (W_ * 0.5f);
+        } else {
+            xs_[i] = (xg * dx);
+        }
+
+        if (hc==1) {
+            ys_[i]= (H_ * 0.5f);
+        } else {
+            ys_[i] = (yg * dy);
+        }
+    }
+
+}
+
+void QuadTreeSim::rebuildQuadtree() {
+    //delete existing quadtree
+    if (tree_ != NULL){
+        tree_->clear();
+        delete tree_;
+        tree_ = NULL;
+    }
+
+    //define bounding box
+    AABB bounds(W_*0.5f, H_ * 0.5f, W_*0.5f, H_ * 0.5f);
+
+    //allocate new quadtree
+    tree_= new Quadtree(bounds, 8, &xs_, &ys_);
+
+    //rebuild tree
+    for (int i=0; i< N_; i++){
+        (void)tree_->insert(i);
+    }
+}
+
+void QuadTreeSim::seedInfectedCount(int k){
+    //rule out nonpositives
+    if (k<=0){
+        return;
+    }
+    if (k> N_){
+        k= N_;
+    }
+
+    //create and mix ids in a new vector
+    vector<int> ids(N_);
+    iota(ids.begin(), ids.end(), 0);
+    shuffle(ids.begin(), ids.begin(), rng_);
+
+    //infect the first k unique ids in the shuffled vector
+    int i=0;
+    while (i<k){
+        int id = ids[i];
+        if (nodes_[id].isSuceptible()){
+            nodes_[id].markExposed(0.0f);
+            nodes_[id].markInfectious(0.0f);
+        } 
+        i++;
+    }
+}
+
+void QuadTreeSim::seedInfectedPercent(float percent, bool atLeastOne){
+    if (percent<=0.0f){
+        if (atLeastOne) seedInfectedCount(1); //if true, 0% will still run the simulation
+        return;
+    }
+    if (percent >= 100.0f){
+        seedInfectedCount(N_); //infect everyone and return
+        return; 
+    }
+
+    //get Percentage
+    int k= static_cast<int>(round((percent/100.0f) *N_));
+    if (atLeastOne) k=max(1,k);
+    seedInfectedCount(k);
+}
+
+float QuadTreeSim::dist2(int a, int b) {
+    float dx = xs_[a] - xs_[b];
+    float dy = ys_[a] - ys_[b];
+    return dx*dx + dy*dy;
+}
+
+QuadTreeSim::Counts QuadTreeSim::step(float t){
+    vector<char> nextState(N_);
+    for (int i=0; i < N_; i++) {
+        nextState[i] = nodes_[i].getState();
+    }
+    vector<int> candidates;
+    candidates.reserve(32);
+
+    //Exposing Nodes
+    for (int i=0; i<N_; i++){
+        if (!nodes_[i].isSuceptible()){
+            continue;
+        }
+        tree_->queryCircle(xs_[i], ys_[i], R_, candidates);
+    }
+
+    //continue here
+}
