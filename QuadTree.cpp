@@ -352,3 +352,30 @@ QuadTreeSim::Counts QuadTreeSim::step(float t){
     }
     return c;
 }
+
+// run until I == 0
+vector<QuadTreeSim::Counts> QuadTreeSim::runToExtinction(){
+    vector<Counts> history; // store cts at each step
+    float t = 0.0f; // simulation time 
+    float dt = 1.0f; // time increment per step
+
+    Counts c0; // initial cts
+    for (int i = 0; i < nodes_.size(); i++){
+        char s = nodes_[i].getState(); // read state
+        if (s == 'S')
+            c0.S++;
+        else if (s == 'E')
+            c0.E++;
+        else if (s == 'I')
+            c0.I++;
+        else if (s == 'R')
+            c0.R++;
+    }
+    history.push_back(c0); // record initial cts at t = 0
+
+    while (history.back().I > 0){ // continue while there are infectious nodes
+        t += dt; // advance time
+        history.push_back(step(t)); // perform a step, record new cts
+    }
+    return history;
+}
