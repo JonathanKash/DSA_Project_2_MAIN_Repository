@@ -1,4 +1,3 @@
-#pragma once
 #include <iostream>
 #include <vector>
 #include <unordered_map>
@@ -14,7 +13,7 @@ using namespace std;
 Grid::Grid (int N, float infectionProbability, float incubationProbability, float recoveryProbability, unsigned int rngSeed)
 : N_(N), rng_(rngSeed), beta_(infectionProbability), alpha_(incubationProbability), gamma_(recoveryProbability){
 buildGrid(N_);
-connectNeighbors4;
+connectNeighbors4();
 }
 
 void Grid::buildGrid(int N){

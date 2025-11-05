@@ -162,7 +162,7 @@ private:
 };
 
 //setup UI (text boxes + toggle + start)
-//create Grid or QuadtreeSim with provided params
+//create Grid or QuadTreeSim with provided params
 //fixed-interval stepping + drawing nodes
 //S/E/I/R counts and controls
 
@@ -220,7 +220,7 @@ int main() {
 
     //pointers to the selected simulator
     bool usingQuadtree = false;
-    QuadtreeSim* qsim = NULL;
+    QuadTreeSim* qsim = NULL;
     Grid* gsim = NULL;
 
     //domain in simulation coordinates
@@ -249,7 +249,7 @@ int main() {
     double acc = 0.0, tSim = 0.0;
     sf::Clock clock;
 
-    //QuadtreeSim::snapshot() output
+    //QuadTreeSim::snapshot() output
     std::vector<float> xs, ys;
     std::vector<char>  st;
     std::vector<int>   ids;
@@ -294,7 +294,7 @@ int main() {
                         //create the requested simulator and seed 5% infected
                         if (usingQuadtree) {
                             if (qsim) { delete qsim; qsim = NULL; }
-                            qsim = new QuadtreeSim(N, domainW, domainH, radius, beta, alpha, gamma, 42u);
+                            qsim = new QuadTreeSim(N, domainW, domainH, radius, beta, alpha, gamma, 42u);
                             qsim->seedInfectedPercent(5.0f, true);
                         } else {
                             if (gsim) { delete gsim; gsim = NULL; }
@@ -374,7 +374,7 @@ int main() {
             while (!paused && acc >= stepInterval) {
                 tSim += simDT;
                 if (usingQuadtree) {
-                    QuadtreeSim::Counts c = qsim->step((float)tSim);
+                    QuadTreeSim::Counts c = qsim->step((float)tSim);
                     S = c.S; E = c.E; I = c.I; R = c.R;
                 } else {
                     Grid::Counts c = gsim->step((float)tSim);
@@ -406,7 +406,7 @@ int main() {
                 float dx = (Wg > 1) ? (domainW / (float)(Wg - 1)) : 0.0f;
                 float dy = (Hg > 1) ? (domainH / (float)(Hg - 1)) : 0.0f;
 
-                const std::vector<Node>& v = gsim->nodes();
+                std::vector<Node>& v = gsim->nodes();
                 for (int id = 0; id < (int)v.size(); ++id) {
                     int xg = id % Wg, yg = id / Wg;
                     float x = (Wg == 1) ? (domainW * 0.5f) : (xg * dx);
