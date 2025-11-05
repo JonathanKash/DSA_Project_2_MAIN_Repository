@@ -321,7 +321,7 @@ QuadTreeSim::Counts QuadTreeSim::step(float t)
         }
         tree_->queryCircle(xs_[i], ys_[i], R_, candidates); // query neightbors in R
         int infNeighbors = 0;                               // infec neighbor counter
-        for (int k = 0; k, candidates.size(); k++)
+        for (int k = 0; candidates.size(); k++)
         {
             int nId = candidates[k];
             if (nId == i)
