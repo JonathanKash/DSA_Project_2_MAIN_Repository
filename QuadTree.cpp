@@ -29,7 +29,7 @@ bool QuadTreeSim::AABB::intersectsCircle(float qx, float qy, float r)
         py = cy + hy;           // move to bottom edge
     float dx = qx - px;         // horiz dist from clamped pt to circle center
     float dy = qy - py;         // vert dist
-    return (dx * dx + dy * dy); // intersects if sq distance <= r^2
+    return (dx * dx + dy * dy)<= (r*r); // intersects if sq distance <= r^2
 }
 
 // constructor
@@ -256,7 +256,7 @@ void QuadTreeSim::seedInfectedCount(int k)
     // create and mix ids in a new vector
     vector<int> ids(N_);
     iota(ids.begin(), ids.end(), 0);
-    shuffle(ids.begin(), ids.begin(), rng_);
+    shuffle(ids.begin(), ids.end(), rng_);
 
     // infect the first k unique ids in the shuffled vector
     int i = 0;
@@ -313,15 +313,14 @@ QuadTreeSim::Counts QuadTreeSim::step(float t)
     candidates.reserve(32);
 
     // Exposing Nodes S->E
-    for (int i = 0; i < N_; i++)
-    {
+    for (int i = 0; i < N_; i++) {
         if (!nodes_[i].isSuceptible())
         { // only susceptible nodes exposed
             continue;
         }
         tree_->queryCircle(xs_[i], ys_[i], R_, candidates); // query neightbors in R
         int infNeighbors = 0;                               // infec neighbor counter
-        for (int k = 0; candidates.size(); k++)
+        for (int k = 0; k < candidates.size(); k++)
         {
             int nId = candidates[k];
             if (nId == i)
@@ -344,14 +343,13 @@ QuadTreeSim::Counts QuadTreeSim::step(float t)
                 nextState[i] = 'E';
             }
         }
-        // Incubation E->I
-        for (int i = 0; i < N_; i++)
-        {
-            if (nodes_[i].isExposed())
-            {                          // consider only exposed nodes
-                if (U_(rng_) < alpha_) // with prob alpha
-                    nextState[i] = 'I';
-            }
+    }
+    // Incubation E->I
+    for (int i = 0; i < N_; i++){
+        if (nodes_[i].isExposed())
+        {                          // consider only exposed nodes
+            if (U_(rng_) < alpha_) // with prob alpha
+                nextState[i] = 'I';
         }
     }
     // Recovery I->R

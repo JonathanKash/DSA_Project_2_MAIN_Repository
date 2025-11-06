@@ -149,10 +149,10 @@ Grid::Counts Grid::step(float t){
     }
 
     //Recovering Nodes
-    for (int i=0; i< N_; i++){
-        if (nodes_[i].isInfectious()){
-            if (U_(rng_) <gamma_){
-                nextState[i]= 'R';
+    for (int i = 0; i < N_; ++i) {
+        if (nodes_[i].isInfectious()) {
+            if (U_(rng_) < gamma_) {
+                nextState[i] = 'R';
             }
         }
     }
@@ -162,7 +162,7 @@ Grid::Counts Grid::step(float t){
         char next = nextState[i];
         if (current == 'S' && next=='E') nodes_[i].markExposed(t);
         else if (current == 'E' && next=='I') nodes_[i].markInfectious(t);
-        else if ((current == 'E' || current =='R') && next== 'R') nodes_[i].markRecovered(t);
+        else if ((current == 'E' || current =='I') && next== 'R') nodes_[i].markRecovered(t);
         }
 
     Counts c{0,0,0,0};

@@ -18,8 +18,8 @@ static sf::Color colorForState(char s) {
     return sf::Color::White;
 }
 
-//a single-line input for numeric text (digits, '.', '-')
 
+//a single-line input for numeric text (digits, '.', '-')
 class TextBox {
 public:
     TextBox() : focused_(false) {}
@@ -161,6 +161,7 @@ private:
     int index_;
 };
 
+
 //setup UI (text boxes + toggle + start)
 //create Grid or QuadTreeSim with provided params
 //fixed-interval stepping + drawing nodes
@@ -265,19 +266,20 @@ int main() {
                 //handle clicks for focusing inputs / toggling model / starting run
                 if (ev.type == sf::Event::MouseButtonPressed) {
                     int mx = ev.mouseButton.x, my = ev.mouseButton.y;
+                    sf::Vector2f mp = window.mapPixelToCoords({ mx, my }, window.getDefaultView());
 
                     //focus whichever textbox was clicked
-                    tbAlpha.setFocused(tbAlpha.contains(mx, my));
-                    tbBeta .setFocused(tbBeta.contains(mx, my));
-                    tbGamma.setFocused(tbGamma.contains(mx, my));
-                    tbN    .setFocused(tbN.contains(mx, my));
-                    tbRadius.setFocused(tbRadius.contains(mx, my));
+                    tbAlpha.setFocused(tbAlpha.contains((int)mp.x, (int)mp.y));
+                    tbBeta .setFocused(tbBeta.contains((int)mp.x, (int)mp.y));
+                    tbGamma.setFocused(tbGamma.contains((int)mp.x, (int)mp.y));
+                    tbN    .setFocused(tbN.contains((int)mp.x, (int)mp.y));
+                    tbRadius.setFocused(tbRadius.contains((int)mp.x, (int)mp.y));
 
                     //toggle model if its buttons were clicked
-                    modelToggle.onClick(mx, my);
+                    modelToggle.onClick((int)mp.x, (int)mp.y);
 
                     //start button
-                    if (startBtn.getGlobalBounds().contains((float)mx, (float)my)) {
+                    if (startBtn.getGlobalBounds().contains(mp)) {
                         // Defaults if fields left empty
                         float alpha = 0.33f, beta = 0.25f, gamma = 0.10f, radius = 3.0f;
                         int N = 400;
@@ -331,11 +333,19 @@ int main() {
                         if (qsim) { delete qsim; qsim = NULL; }
                         if (gsim) { delete gsim; gsim = NULL; }
                         screen = Setup;
+                        window.setView(window.getDefaultView()); // <-- reset from sim view
                     }
                 } else if (ev.type == sf::Event::Resized) {
-                    sf::View v = window.getView();
-                    v.setSize((float)ev.size.width, (float)ev.size.height);
-                    window.setView(v); viewSet = false;
+                    sf::FloatRect visibleArea(0, 0, ev.size.width, ev.size.height);
+                    window.setView(sf::View(visibleArea));
+                    if (screen == Running) {
+                        sf::View v = window.getView();
+                        v.setSize((float)ev.size.width, (float)ev.size.height);
+                        window.setView(v);
+                        viewSet = false; // recompute domain-fitting view next frame
+                    } else { // Setup screen
+                        window.setView(window.getDefaultView()); // keep pixel-true UI
+                    }
                 }
             }
         }
